@@ -13,7 +13,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--disable_gpu', type=bool, default=False)
 parser.add_argument('--content_image', type=str, default=None)
 parser.add_argument('--style_image', type=str, default=None)
-parser.add_argument('--output_dir', type=str, default='output/test.png')
+parser.add_argument('--output_dir', type=str, default='output/out.png')
+parser.add_argument('--iterations', type=int, default=3_000)
+parser.add_argument('--content_weight', type=float, default=10_000)
+parser.add_argument('--style_weight', type=float, default=0.01)
+parser.add_argument('--variation_weight', type=float, default=30)
 args = parser.parse_args()
 
 if args.disable_gpu:
@@ -66,7 +70,7 @@ class StyleContentExtractor(tf.keras.Model):
     def call(self, inputs):
 
         inputs = inputs * 255.0
-        inputs  = tf.keras.applications.vgg.preprocess_input(
+        inputs  = tf.keras.applications.vgg19.preprocess_input(
             inputs)
 
         outputs = self.model(inputs)
@@ -93,9 +97,9 @@ class NeuralStyleTransfer:
                  optimizer,
                  content_layers,
                  style_layers,
-                 content_loss_weight=10_000,
-                 style_loss_weight=0.01,
-                 total_variation_loss_weight=30):
+                 content_weight=10_000,
+                 style_weight=0.01,
+                 variation_weight=30):
 
         self.optimizer = optimizer
         self.extractor = StyleContentExtractor(
@@ -104,9 +108,9 @@ class NeuralStyleTransfer:
         )
         self.num_content_layers = len(content_layers)
         self.num_style_layers = len(style_layers)
-        self.content_loss_weight = content_loss_weight
-        self.style_loss_weight = style_loss_weight
-        self.total_variation_loss_weight = total_variation_loss_weight
+        self.content_weight = content_weight
+        self.style_weight = style_weight
+        self.variation_weight = variation_weight
 
     def _compute_loss(self, targets, outputs):
         style_outputs = outputs['style']
@@ -118,13 +122,13 @@ class NeuralStyleTransfer:
             [tf.reduce_mean((content_outputs[name] - content_targets[name])**2)
             for name in content_outputs.keys()]
         )
-        content_loss *= self.content_loss_weight / self.num_content_layers
+        content_loss *= self.content_weight / self.num_content_layers
 
         style_loss = tf.add_n(
             [tf.reduce_mean((style_outputs[name] - style_targets[name])**2)
              for name in style_outputs.keys()]
         )
-        style_loss *= self.style_loss_weight / self.num_style_layers
+        style_loss *= self.style_weight / self.num_style_layers
 
         return content_loss + style_loss
 
@@ -139,10 +143,8 @@ class NeuralStyleTransfer:
             with tf.GradientTape() as tape:
                 outputs = self.extractor(image)
                 loss = self._compute_loss(targets, outputs)
-                loss += (
-                    self.total_variation_loss_weight
-                    * tf.image.total_variation(image)
-                )[0]
+                loss += self.variation_weight * tf.image.total_variation(image)
+                loss = loss[0]
             self._backprop_loss(tape, loss, image)
             return loss
         return _train_step
@@ -197,9 +199,9 @@ if __name__ == '__main__':
             'block4_conv1',
             'block5_conv1'
         ],
-        content_loss_weight=10_000,
-        style_loss_weight=0.01,
-        total_variation_loss_weight=30)
+        content_weight=args.content_weight,
+        style_weight=args.style_weight,
+        variation_weight=args.variation_weight)
 
     targets = {
         'content': model.extractor(content_image)['content'],
@@ -208,7 +210,7 @@ if __name__ == '__main__':
 
     image = tf.Variable(content_image)
 
-    model.fit_style(image, targets, iterations=3000)
+    model.fit_style(image, targets, iterations=args.iterations)
     image = np.squeeze(model.get_styled_image.numpy()*255.0, 0)
     image = image.astype(np.uint8)
     image = PIL.Image.fromarray(image)
