@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--disable_gpu', type=bool, default=True)
+parser.add_argument('--disable_gpu', type=bool, default=False)
 parser.add_argument('--content_image', type=str, default=None)
 parser.add_argument('--style_image', type=str, default=None)
 parser.add_argument('--output_dir', type=str, default='output/test.png')
@@ -208,7 +208,7 @@ if __name__ == '__main__':
 
     image = tf.Variable(content_image)
 
-    model.fit_style(image, targets, iterations=10)
+    model.fit_style(image, targets, iterations=3000)
     image = np.squeeze(model.get_styled_image.numpy()*255.0, 0)
     image = image.astype(np.uint8)
     image = PIL.Image.fromarray(image)
