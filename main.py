@@ -165,6 +165,25 @@ class NeuralStyleTransfer:
 
 if __name__ == '__main__':
 
+    if args.content_image is None:
+        content_path = tf.keras.utils.get_file(
+            'YellowLabradorLooking_new.jpg',
+            'https://storage.googleapis.com/download.tensorflow.org/'
+             + 'example_images/YellowLabradorLooking_new.jpg')
+        content_image = load_img(content_path)
+    else:
+        content_image = load_img(args.content_image)
+
+    if args.style_image is None:
+        style_path = tf.keras.utils.get_file(
+            'kandinsky5.jpg',
+            'https://storage.googleapis.com/download.tensorflow.org/'
+            + 'example_images/Vassily_Kandinsky%2C_1913_-_Composition_7.jpg')
+        style_image = load_img(style_path)
+    else:
+        style_image = load_img(args.style_image)
+
+
     model = NeuralStyleTransfer(
         model=tf.keras.applications.VGG19,
         optimizer=tf.optimizers.Adam(learning_rate=1e-1),
@@ -181,9 +200,6 @@ if __name__ == '__main__':
         content_loss_weight=10_000,
         style_loss_weight=0.01,
         total_variation_loss_weight=30)
-
-    content_image = load_img(args.content_image)
-    style_image   = load_img(args.style_image)
 
     targets = {
         'content': model.extractor(content_image)['content'],

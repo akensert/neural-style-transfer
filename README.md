@@ -1,15 +1,13 @@
-#### neural style transfer
+## neural style transfer
 
-References:<br>
-https://www.tensorflow.org/tutorials/generative/style_transfer<br>
-https://arxiv.org/abs/1508.06576<br>
+#### References:<br>
+1. https://www.tensorflow.org/tutorials/generative/style_transfer<br>
+2. https://arxiv.org/abs/1508.06576<br>
 <br>
 
-Requirements<br>
+#### Requirements<br>
 Python >= 3.6<br>
-<br>
 From terminal, run: `pip install -r requirements.txt` to install packages (including TensorFlow)<br>
 
-Style an image:<br>
-From terminal, run: `python main.py --style_image='{path_to_image}' --content_image='{path_to_image}' --output_dir='output/{name_of_styled_image}'`. For more arguments, check inside main.py. 
-
+#### Style your image:<br>
+From terminal, run: `python main.py --content_image='{path_to_image}' --style_image='{path_to_image}' --output_dir='output/{name_of_styled_image}'`, or `python main.py` for default images. Check inside main.py for more arguments. 
