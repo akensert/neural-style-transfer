@@ -66,7 +66,7 @@ class StyleContentExtractor(tf.keras.Model):
     def call(self, inputs):
 
         inputs = inputs * 255.0
-        inputs  = tf.keras.applications.resnet.preprocess_input(
+        inputs  = tf.keras.applications.vgg.preprocess_input(
             inputs)
 
         outputs = self.model(inputs)
